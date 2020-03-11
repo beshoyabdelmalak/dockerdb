@@ -25,7 +25,6 @@ def mongorestore(service, restore):
     command = ['mongorestore', dst]
     exit_code, output = service.container.exec_run(command)
 
-    print('EXIT CODE', exit_code, command, output)
     if exit_code != 0:
         raise subprocess.CalledProcessError(exit_code, command, output)
 
@@ -37,14 +36,16 @@ def get_service(version):
     return service
 
 
-def ensure_service(version, replicaset, port):
+def ensure_service(version, replicaset, port, client_args):
     if version not in CONTAINER_CACHE:
         CONTAINER_CACHE[version] = dockerdb.mongo.Mongo(
-            version, wait=False, replicaset=replicaset, exposed_port=port)
+            version, wait=False, replicaset=replicaset, exposed_port=port,
+            client_args=client_args)
 
 
 def mongo_fixture(scope='function', versions=['latest'], data=None,
-                  restore=None, reuse=True, replicaset=None, port=27017):
+                  restore=None, reuse=True, replicaset=None, port=27017,
+                  client_args=None):
     """create ficture for py.test
 
     Attributes:
@@ -63,12 +64,14 @@ def mongo_fixture(scope='function', versions=['latest'], data=None,
         restore (str): path to directory containing a mongo dump
         reuse (bool): wether to reuse containers or create a new container
             for every requested injection
+        client_args(dict): arguments that get passed to the pymongo client
+
     """
 
     # parallelized start of different versions
     if reuse:
         for version in versions:
-            ensure_service(version, replicaset, port)
+            ensure_service(version, replicaset, port, client_args)
 
     @pytest.fixture(scope=scope,  params=versions)
     def mongo(request):
@@ -76,7 +79,10 @@ def mongo_fixture(scope='function', versions=['latest'], data=None,
             service = get_service(request.param)
         else:
             service = dockerdb.service.Mongo(request.param, wait=True,
-                                             replicaset=replicaset, exposed_port=port)
+                                             replicaset=replicaset,
+                                             exposed_port=port,
+                                             client_args=client_args)
+
         client = service.pymongo_client()
         service.wait()
 
