@@ -76,7 +76,7 @@ def mongo_fixture(scope='function', versions=['latest'], data=None,
             service = get_service(request.param)
         else:
             service = dockerdb.service.Mongo(request.param, wait=True,
-                                     replicaset=replicaset, exposed_port=port)
+                                             replicaset=replicaset, exposed_port=port)
         client = service.pymongo_client()
         service.wait()
 
