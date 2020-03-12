@@ -55,7 +55,7 @@ class Service(object):
         """get docker inspect data for container"""
         return self.client.api.inspect_container(self.container.id)
 
-    def exec_run(self, command, input_file=None):
+    def exec_run(self, command, input_file):
         """Execute a command and pipe data into it """
         exec_info = self.client.api.exec_create(self.container.name, command, stdin=True)
         exec_id = exec_info['Id']
@@ -70,7 +70,7 @@ class Service(object):
         while True:
             r_list, w_list, _ = select.select([sock], [sock], [])
 
-            if w_list and input_file:
+            if w_list:
                 file_data = input_file.read(4096)
                 if file_data == b'':
                     break
