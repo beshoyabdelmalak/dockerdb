@@ -62,8 +62,12 @@ class Service(object):
 
         sock = self.client.api.exec_start(exec_id, socket=True)
 
-        # Wrapper doesn't give access to all needed methods
-        sock = sock._sock
+        if hasattr(sock, "_sock"):
+            # On python 3 docker-py returns a socket.SocketIO
+            # Wrapper doesn't give access to all needed methods
+            # So we extract the low level socket instance
+            sock = sock._sock
+
         sock.setblocking(False)
         output = b''
 
