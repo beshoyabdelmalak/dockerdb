@@ -7,7 +7,7 @@ import dockerdb.mongo_pytest
 
 BASE_PATH = os.path.dirname(__file__)
 DUMP_PATH = os.path.join(BASE_PATH, 'dump')
-BROKEN_DUMP_PATH = os.path.join(BASE_PATH, 'error_dump')
+ERROR_DUMP_PATH = os.path.join(BASE_PATH, 'error_dump')
 
 DATA = {
     'dbname': {
@@ -27,14 +27,8 @@ mongo2 = dockerdb.mongo_pytest.mongo_fixture(versions=["3.4"], restore=DUMP_PATH
 
 def test_package_consistent():
     # ensure restore path does actually exist
-    assert os.path.exists(os.path.join(DUMP_PATH, 'test', 'user.bson'))
-    assert os.path.exists(os.path.join(DUMP_PATH, 'test', 'user.metadata.json'))
-
-    dump_data_path = os.path.join(BROKEN_DUMP_PATH, 'test', 'user.bson')
-    dump_metadata_path = os.path.join(
-        BROKEN_DUMP_PATH, 'test', 'user.metadata.json')
-    assert os.path.exists(dump_data_path)
-    assert os.path.exists(dump_metadata_path)
+    assert os.path.exists(DUMP_PATH)
+    assert os.path.exists(ERROR_DUMP_PATH)
 
 
 def test_mongo_1(mongo):
@@ -65,7 +59,7 @@ def test_mongo_restore(mongo2):
 
     # Check that loading a broken dump throws an error
     with pytest.raises(subprocess.CalledProcessError) as exc_info:
-        dockerdb.mongo_pytest.mongorestore(mongo2, BROKEN_DUMP_PATH)
+        dockerdb.mongo_pytest.mongorestore(mongo2, ERROR_DUMP_PATH)
 
     exception = exc_info.value
     assert exception.cmd[0] == 'mongorestore'

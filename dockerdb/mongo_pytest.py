@@ -21,12 +21,10 @@ def insert_data(client, data):
 
 
 def mongorestore(service, restore):
-    dst = os.path.join(service.share, 'dump')
-    if os.path.exists(dst):
-        shutil.rmtree(dst)
-    shutil.copytree(restore, dst)
-    command = ['mongorestore', dst]
-    exit_code, output = service.container.exec_run(command)
+    command = ['mongorestore', "--archive"]
+
+    with open(restore, 'rb') as restore_file:
+        exit_code, output = service.exec_run(command, restore_file)
 
     if exit_code != 0:
         LOG.error(output.decode('utf-8'))

@@ -5,6 +5,8 @@ import tempfile
 import weakref
 import atexit
 import functools
+import select
+import socket
 
 import docker
 
@@ -52,6 +54,48 @@ class Service(object):
     def inspect(self):
         """get docker inspect data for container"""
         return self.client.api.inspect_container(self.container.id)
+
+    def exec_run(self, command, input_file=None):
+        """Execute a command and pipe data into it """
+        exec_info = self.client.api.exec_create(self.container.name, command, stdin=True)
+        exec_id = exec_info['Id']
+
+        sock = self.client.api.exec_start(exec_id, socket=True)
+
+        # Wrapper doesn't give access to all needed methods
+        sock = sock._sock
+        sock.setblocking(False)
+        output = b''
+
+        while True:
+            r_list, w_list, _ = select.select([sock], [sock], [])
+
+            if w_list and input_file:
+                file_data = input_file.read(4096)
+                if file_data == b'':
+                    break
+                else:
+                    sock.send(file_data)
+
+            if r_list:
+                socket_output = sock.recv(4096)
+                if socket_output == b'':
+                    break
+                else:
+                    output += socket_output
+
+        sock.shutdown(socket.SHUT_WR)
+        sock.setblocking(True)
+        output += sock.recv(4096)
+        sock.close()
+
+        while True:
+            exec_info = self.client.api.exec_inspect(exec_id)
+            exit_code = exec_info['ExitCode']
+            if exit_code is not None:
+                break
+
+        return exit_code, output
 
     def ip_address(self):
         network_settings = self.inspect()['NetworkSettings']

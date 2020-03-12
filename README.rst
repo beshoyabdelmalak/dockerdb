@@ -30,3 +30,13 @@ Features
 --------
 
 * py.test integration
+* reset your mongo instance before every test
+* restore archived mongo dumps before every test
+* ...
+
+
+Usage
+-----
+
+Dockerdb uses `mongorestore --archive` to restore mongo dumps.
+To create an archived dump, run `mongodump --archive > ./dump`
