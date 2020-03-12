@@ -29,9 +29,13 @@ Proof of concept.
 Features
 --------
 
+* starts temporary mongo containers
+
 * py.test integration
-* reset your mongo instance before every test
-* restore archived mongo dumps before every test
+* executes every test against multiple versions of mongo
+* resets the temporary mongo container before every test
+* restores archived mongo dumps before every test
+* support for single member replica sets
 * ...
 
 
