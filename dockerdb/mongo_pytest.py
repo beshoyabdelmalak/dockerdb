@@ -27,7 +27,10 @@ def mongorestore(service, restore):
         exit_code, output = service.exec_run(command, restore_file)
 
     if exit_code != 0:
-        LOG.error(output.decode('utf-8'))
+        if isinstance(output, bytes):
+            output = output.decode('utf-8', errors='ignore')
+
+        LOG.error(output)
 
         raise subprocess.CalledProcessError(exit_code, command, output)
 

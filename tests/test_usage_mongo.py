@@ -64,4 +64,4 @@ def test_mongo_restore(mongo2):
     exception = exc_info.value
     assert exception.cmd[0] == 'mongorestore'
     assert exception.returncode == 1
-    assert 'unexpected EOF' in exception.output.decode('utf-8')
+    assert 'unexpected EOF' in exception.output

@@ -1,5 +1,6 @@
 import os
 import time
+import sys
 import shutil
 import tempfile
 import weakref
@@ -57,7 +58,9 @@ class Service(object):
 
     def exec_run(self, command, input_file):
         """Execute a command and pipe data into it """
-        exec_info = self.client.api.exec_create(self.container.name, command, stdin=True)
+        exec_info = self.client.api.exec_create(
+            self.container.name, command, stdin=True)
+
         exec_id = exec_info['Id']
 
         sock = self.client.api.exec_start(exec_id, socket=True)
@@ -76,6 +79,7 @@ class Service(object):
 
             if w_list:
                 file_data = input_file.read(4096)
+
                 if file_data == b'':
                     break
                 else:
@@ -88,9 +92,19 @@ class Service(object):
                 else:
                     output += socket_output
 
+        # TODO Find a way to avoid hardcoded sleep limits for python 2
+        # TODO Solutions is still unknown, see: STUD-583
+        python_version = sys.version_info[0]
+        if python_version < 3:
+            time.sleep(1)
+
         sock.shutdown(socket.SHUT_WR)
+
+        if python_version < 3:
+            time.sleep(0.2)
+
         sock.setblocking(True)
-        output += sock.recv(4096)
+        output += sock.recv(4096 * 100)
         sock.close()
 
         while True:
