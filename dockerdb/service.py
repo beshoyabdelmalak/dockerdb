@@ -94,14 +94,11 @@ class Service(object):
 
         # TODO Find a way to avoid hardcoded sleep limits for python 2
         # TODO Solutions is still unknown, see: STUD-583
-        python_version = sys.version_info[0]
-        if python_version < 3:
-            time.sleep(1)
+        time.sleep(1)
 
         sock.shutdown(socket.SHUT_WR)
 
-        if python_version < 3:
-            time.sleep(0.2)
+        time.sleep(1)
 
         sock.setblocking(True)
         output += sock.recv(4096 * 100)

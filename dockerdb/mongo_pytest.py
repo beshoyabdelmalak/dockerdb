@@ -96,7 +96,16 @@ def mongo_fixture(scope='function', versions=['latest'], data=None,
             insert_data(client, data)
 
         if restore:
-            mongorestore(service, restore)
+            for i in range(3):
+                try:
+                    mongorestore(service, restore)
+                    break
+                except Exception as error:
+                    if i == 2:
+                        LOG.error('Error while restoring {}'.format(error))
+                        raise error
+                    else:
+                        LOG.warn('Retrying to restore...')
 
         yield service
 
